@@ -54,6 +54,10 @@ import androidx.room.Update
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import softserve.academy.mylist.ui.theme.MyListTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,6 +152,16 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
+    // Додавання кнопки видалення
+
+    fun deleteItem(index: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val item = _shoppingList[index]
+            dao.deleteItem(item)
+            _shoppingList.removeAt(index)
+        }
+    }
+
 //    val shoppingList = mutableStateListOf(
 //        ShoppingItem("Молоко"),
 //        ShoppingItem("Хліб"),
@@ -176,7 +190,8 @@ class ShoppingListViewModel(application: Application) : AndroidViewModel(applica
 @Composable
 fun ShoppingItemCard(
     item: ShoppingItem,
-    onToggleBought: () -> Unit = {}) {
+    onToggleBought: () -> Unit = {},
+    onDelete: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -195,8 +210,17 @@ fun ShoppingItemCard(
         Text(
             text = item.name,
             modifier = Modifier.weight(1f),
-            fontSize = 18.sp
+            fontSize = 18.sp,
+
+            // додаванння закреслення
+            style = if (item.isBought) MaterialTheme.typography.bodyLarge.copy(
+                textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough,
+                color = Color.Gray
+            ) else MaterialTheme.typography.bodyLarge
         )
+        IconButton(onClick = onDelete) {
+            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+        }
     }
 }
 
@@ -245,9 +269,11 @@ fun ShoppingListScreen(viewModel: ShoppingListViewModel = viewModel(
             AddItemButton { viewModel.addItem(it) }
         }
           itemsIndexed(viewModel.shoppingList) { ix, item ->
-            ShoppingItemCard(item) {
-                viewModel.toggleBought(ix)
-            }
+              ShoppingItemCard(
+                  item = item,
+                  onToggleBought = { viewModel.toggleBought(ix) },
+                  onDelete = { viewModel.deleteItem(ix) } // Передаємо дію видалення
+              )
         }
     }
 }
@@ -263,8 +289,8 @@ fun ShoppingListScreenPreview() {
 fun ShoppingItemCardPreview() {
     var toggleState by remember { mutableStateOf(false) }
     ShoppingItemCard(
-        ShoppingItem("Молоко", isBought = toggleState)
-    ) {
-            toggleState = !toggleState
-        }
+        item = ShoppingItem("Молоко", isBought = toggleState),
+        onToggleBought = { toggleState = !toggleState },
+        onDelete = { /* Нічого не робимо в прев'ю */ }
+    )
 }
