@@ -58,6 +58,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.ui.platform.testTag
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,8 +66,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyListTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Surface(modifier = Modifier.padding(innerPadding)) {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = Color(0xFFE3F2FD) // BG color
+                ) { innerPadding ->
+                    Column(modifier = Modifier.padding(innerPadding)) {
                         ShoppingListScreen()
                     }
                 }
@@ -197,8 +201,8 @@ fun ShoppingItemCard(
             .fillMaxWidth()
             .padding(8.dp)
             .background(
-                MaterialTheme.colorScheme.surfaceDim,
-                MaterialTheme.shapes.large
+                color = Color.White.copy(alpha = 0.9f),
+                shape = MaterialTheme.shapes.large
             )
             .clickable { onToggleBought() }
             .padding(16.dp),
@@ -209,7 +213,9 @@ fun ShoppingItemCard(
         })
         Text(
             text = item.name,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .testTag("item_text"),
             fontSize = 18.sp,
 
             // додаванння закреслення
@@ -218,7 +224,9 @@ fun ShoppingItemCard(
                 color = Color.Gray
             ) else MaterialTheme.typography.bodyLarge
         )
-        IconButton(onClick = onDelete) {
+        IconButton(
+            modifier = Modifier.testTag("delete_button"),
+            onClick = onDelete) {
             Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
         }
     }
@@ -241,12 +249,14 @@ fun AddItemButton(addItem: (String) -> Unit = {}) {
 
     Column {
         OutlinedTextField(
+            modifier = Modifier.testTag("item_input"),
             value = text,
             onValueChange = { text = it },
             label = { Text("Add Item") }
         )
-        Button(onClick = {
-            if (text.isNotEmpty()) {
+        Button(
+            modifier = Modifier.testTag("add_button"),
+            onClick = { if (text.isNotEmpty()) {
                 addItem(text)
                 text = ""
             }
